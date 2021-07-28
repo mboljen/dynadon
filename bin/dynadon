@@ -1,0 +1,800 @@
+#!/usr/bin/env perl
+#
+# Created:         Mo 2020-04-20 23:32:27 CEST
+# Last Modified:   Thu 2021-02-11 01:47:17 CET
+#
+# bodymorph:
+#   Compress and inflate a human body surface FE mesh
+
+use strict;
+use warnings;
+
+use Digest::SHA qw(sha1_hex);
+use File::Basename;
+use File::Slurp;
+use File::stat;
+use FindBin;
+use Getopt::Long;
+use List::Util qw(max min reduce sum);
+use Math::Trig;
+use Pod::Usage;
+use POSIX qw(strftime);
+use Term::ProgressBar;
+
+use CAE::DYNA::Keyfile;
+
+
+#-------------------------------------------------------------------------------
+#     I N T E R F A C E
+#-------------------------------------------------------------------------------
+
+# Global options
+my $radius;
+my $scale;
+my $lcidf;
+my $outkeyfile;
+my $thamax  = 80;
+my $thastep = 5;
+my $flip    = 0;
+my $force   = 0;
+my $yes     = 0;
+my $dump    = 0;
+my $man     = 0;
+my $help    = 0;
+
+# Fetch options
+GetOptions(
+    'o|out=s'    => \$outkeyfile,
+    'l|lcidf=i'  => \$lcidf,
+    'r|radius=f' => sub { $radius = $_[1]; $scale = undef; },
+    's|scale=f'  => sub { $scale = $_[1]; $radius = undef; },
+    'flip'       => \$flip,
+    'thamax=f'   => \$thamax,
+    'thastep=f'  => \$thastep,
+    'f|force'    => \$force,
+    'y|yes!'     => \$yes,
+    'dump!'      => \$dump,
+    'man'        => \$man,
+    'help|?'     => \$help,
+) or pod2usage();
+
+pod2usage(1) if $help;
+pod2usage(-exitval => 0, -verbose => 2) if $man;
+
+# Fetch arguments
+my $tarkeyfile = pop @ARGV;
+my $srckeyfile = shift @ARGV;
+my $setkeyfile = shift @ARGV;
+
+die "Source keyfile undefined" unless defined $srckeyfile;
+die "Target keyfile undefined" unless defined $tarkeyfile;
+
+die "Source keyfile $srckeyfile not found" unless -f $srckeyfile;
+die "Target keyfile $tarkeyfile not found" unless -f $tarkeyfile;
+
+
+#-------------------------------------------------------------------------------
+#     L O A D   S O U R C E   A N D   T A R G E T   K E Y F I L E S
+#-------------------------------------------------------------------------------
+
+# Initialize keyfiles
+my $srckey = CAE::DYNA::Keyfile->new({ filepath => $srckeyfile });
+my $tarkey = CAE::DYNA::Keyfile->new({ filepath => $tarkeyfile });
+
+# Load keyfiles
+$srckey->load;
+$tarkey->load;
+
+# Check if source nodes available
+my @count = $srckey->fetch({ keyword => '*ELEMENT_SHELL' });
+die "*** ERROR\n" .
+    "    Cannot find any shell elements in keyfile '$srckeyfile'" unless @count;
+
+# Check if target elements available
+@count = $tarkey->fetch({ keyword => '*ELEMENT_BEAM' });
+die "*** ERROR\n" .
+    "    Cannot find any beam elements in keyfile '$tarkeyfile'" unless @count;
+
+
+#-------------------------------------------------------------------------------
+#     N E A R E S T   N E I G H B O R   S E A R C H
+#-------------------------------------------------------------------------------
+
+# Initialize auto-defined name of setkeyfile
+my $autosetkeyfile;
+
+# Set default filename for setkeyfile
+unless (defined $setkeyfile)
+{
+    # Initialize default name from sourcekeyfile
+    my ($name,$path,$suffix) = fileparse($srckeyfile, qr/\.[^.]*/);
+    $autosetkeyfile = $name . '.set' . $suffix;
+    $autosetkeyfile = $path . $autosetkeyfile unless $path eq './';
+
+    # Set name of setkeyfile
+    $setkeyfile = $autosetkeyfile;
+}
+
+# Initialize set shell keyfile
+my $setkey = CAE::DYNA::Keyfile->new({ filepath => $setkeyfile });
+
+# Load keyfile if exists and option FORCE not active
+$setkey->load if -f $setkeyfile and not $force;
+
+# Container hash to map source element ID to target element ID
+my %nn;
+
+# Loop over all target elements
+for my $tarelem ($tarkey->fetch({ keyword => '*ELEMENT_BEAM' }))
+{
+    # Use element ID as shell set ID
+    my $tareid = $tarelem->uid;
+
+    # Fetch shell set if exists, otherwise initialize new one
+    my ($set) = $setkey->fetch({ keyword => '*SET_SHELL', uid => $tareid });
+    unless (defined $set)
+    {
+        # Initialize new shell set
+        $set = CAE::DYNA::Keyword::Set_Shell->new({ sid => $tareid });
+        $set->title(sprintf('Target EID %d', $tareid));
+
+        # Add shell set to setkeyfile
+        $setkey->add($set);
+    }
+
+    # Loop over all elements in set
+    for my $srceid ($set->eid->all)
+    {
+        # Issue warning if key already defined
+        warn "*** WARNING\n" .
+             "    Source EID $srceid associated with target EID $nn{$srceid}\n" .
+             "    Re-associating it with target EID $tareid\n"
+                if exists $nn{$srceid} and
+                          $nn{$srceid} != $tareid;
+
+        # Assign target element ID to current source element ID
+        $nn{$srceid} = $tareid;
+    }
+}
+
+# Fetch all shell elements of source mesh
+@count = $srckey->fetch({ keyword => '*ELEMENT_SHELL' });
+
+# Initialize progress bar
+my $progress = Term::ProgressBar->new({
+    name       => '[Phase 1] Connectivity .... ',
+    count      => max(1, $#count),
+    ETA        => 'linear',
+    term_width => 80,
+    remove     => 1,
+});
+
+# Configure progress bar settings
+$progress->minor(0);
+$progress->max_update_rate(1.0);
+
+# Loop over source elements
+for my $i (0 .. $#count)
+{
+    # Update progress bar
+    $progress->update($i);
+
+    # Get source element EID
+    my $srcelem = $count[$i];
+    my $srceid = $srcelem->uid;
+
+    # Determine normal vector
+    my $dirvec = $srcelem->normal;
+    $dirvec *= -1 if $flip;
+
+    # Proceed to next element if closest neighbor already known
+    next if exists $nn{$srceid};
+
+    # Number of nodes
+    my %vector;
+
+    # Fetch associated nodes
+    foreach my $key (qw( n1 n2 n3 n4 n5 n6 n7 n8 ))
+    {
+        my $nid = $srcelem->$key;
+        next unless defined $nid and $nid > 0;
+        my $node = $srckey->fetch({ label => 'NID', uid => $nid });
+        $vector{$nid} = $node->vector;
+    }
+
+    # Initialize vector point to element center
+    my $x = sum(values %vector) / scalar keys %vector;
+
+    # Initialize minimum search cone angle
+    my $thamax0 = $thamax;
+
+    # Initilaize search result
+    my $tareid0;
+
+    # Unless search domain is a cone
+    while (not defined $tareid0 and $thamax0 < 180)
+    {
+        # Find closest target EID in search cone
+        my $d0;
+
+        # Loop over all target EID
+        for my $tarelem ($tarkey->fetch({ keyword => '*ELEMENT_BEAM' }))
+        {
+            # Fetch target EID
+            my $tareid = $tarelem->uid;
+
+            # Fetch nodes
+            my $p1 = $tarkey->fetch({ label => 'NID', uid => $tarelem->n1 });
+            my $p2 = $tarkey->fetch({ label => 'NID', uid => $tarelem->n2 });
+
+            # Convert nodes to vectors
+            $p1 = $p1->vector;
+            $p2 = $p2->vector;
+
+            # Initialize orthogonal projection, PG
+            my $pg = $p1;
+
+            # Handle non-zero length target elements
+            if ( $p1->dist($p2) > 0 )
+            {
+                # Get direction vector U from P1 to P2
+                my $u = $p2 - $p1;
+
+                # Find projection point on target element
+                my $lda = ( $x - $p1 ) * $u / ( $u * $u );
+
+                # Restrict LDA to domain [ 0, 1 ]
+                $lda = min($lda, 1.0);
+                $lda = max($lda, 0.0);
+
+                # Find orthogonal projection, PG
+                $pg = $p1 + $lda * $u;
+            }
+
+            # Find direction vector, DIR
+            my $dir = $pg - $x;
+
+            # Get length of direction vector, D
+            my $d = sqrt($dir->norm2);
+
+            # Check if DIR and DIRVEC point rougly in opposite direction
+            my $cross = $dir x $dirvec;
+            my $dot   = $dir * $dirvec;
+
+            # Find angle between vectors
+            my $tha = rad2deg( atan2 ( abs($cross), $dot ) );
+
+            # Evaluate proximity criterium
+            if ($tha <= $thamax0 and (not defined $d0 or $d < $d0))
+            {
+                # Update best candidate
+                $d0 = $d;
+                $tareid0 = $tareid;
+            }
+        }
+
+        # Evaluate results of closest neighbor search
+        if (defined $tareid0)
+        {
+            # Save closest target EID
+            $nn{$srceid} = $tareid0;
+
+            # Fetch corresponding shell set and add source EID
+            my $set = $setkey->fetch({ keyword => '*SET_SHELL',
+                                       uid     => $tareid0 });
+            $set->eid->push($srceid);
+
+            # Sort element list
+            $set->eid->sort_in_place( sub { $_[0] <=> $_[1] } );
+        }
+        else
+        {
+            # Enlarge the angle of the search cone
+            $thamax0 += $thastep;
+        }
+    }
+}
+
+# Finalize progress bar
+$progress->update(max(1, $#count));
+
+# Save setkeyfile
+$setkey->save if $dump;
+
+# Unset shell set keyfile
+$setkey = undef;
+
+# Check if option --scale or --radius defined
+unless (defined $scale or defined $radius)
+{
+    # Issue warning and exit
+    warn "*** WARNING\n" .
+         "    Morphing undefined, specify --scale or --radius to proceed\n";
+    exit;
+}
+
+
+#-------------------------------------------------------------------------------
+#     S O U R C E   M E S H   S E G M E N T A T I O N
+#-------------------------------------------------------------------------------
+
+# Get all source nodes
+@count = $srckey->fetch({ label => 'NID' });
+
+# Get maximum source node ID
+my $maxnid = max( 0, map { $_->uid } @count );
+
+# Update progress bar
+$progress = Term::ProgressBar->new({
+    name       => '[Phase 2] Fragmentation ... ',
+    count      => max(1, $#count),
+    ETA        => 'linear',
+    term_width => 80,
+    remove     => 1,
+});
+
+# Configure progressb ar settings
+$progress->minor(0);
+$progress->max_update_rate(1.0);
+
+# Initialize hash containing associated elements of each source node
+my %assocelem;
+
+# Check source keyfile for need for segmentation
+sub checksegmentation
+{
+    #
+    my $result = 0;
+
+    # Rebuild hash containing associated elements for each node
+    %assocelem = ();
+    for my $elem ($srckey->fetch({ keyword => '*ELEMENT_SHELL' }))
+    {
+        for my $key (qw( n1 n2 n3 n4 n5 n6 n7 n8 ))
+        {
+            my $nid = $elem->$key;
+            push @{$assocelem{$nid}}, $elem if defined $nid and $nid > 0;
+        }
+    }
+
+    # Loop over all source nodes and check connectivity
+    for my $node ($srckey->fetch({ 'label' => 'NID' }))
+    {
+        # Get node ID
+        my $nid = $node->uid;
+
+        # Lookup target EID of current node
+        my %tarelem;
+        for my $elem (@{$assocelem{$nid}})
+        {
+            my $eid = $elem->uid;
+            my $tareid = $nn{$eid};
+            push @{$tarelem{$tareid}}, $eid;
+        }
+
+        # If there are more than 1 target elements, segmentation is needed
+        if (scalar keys %tarelem > 1)
+        {
+            $result = 1;
+            last;
+        }
+    }
+
+    # Return check result
+    return $result;
+}
+
+# Check whether source mesh needs segmentation
+while (checksegmentation)
+{
+    # Loop over all source nodes
+    for my $i (0 .. $#count)
+    {
+        # Update progress bar
+        $progress->update($i);
+
+        # Fetch node and node ID
+        my $node = $count[$i];
+        my $nid = $node->uid;
+
+        # Initialize hash containing target elements
+        my %foreign;
+
+        # Loop over associated source elements
+        for my $elem (@{$assocelem{$nid}})
+        {
+            # Fetch source EID and associated target EID
+            my $eid = $elem->uid;
+            my $tareid = $nn{$eid};
+
+            # Add target EID if defined
+            push @{$foreign{$tareid}}, $eid if defined $tareid;
+        }
+
+        # Find key pointing to largest array
+        my $maxkey =
+            reduce {
+                scalar $foreign{$a} >
+                scalar $foreign{$b} ? $a : $b } keys %foreign;
+
+        # Remove key from hash pointing to largest array
+        delete $foreign{$maxkey} if defined $maxkey;
+
+        # Loop over remaining target elements
+        for my $array (values %foreign)
+        {
+            # Find free NID for cloned node
+            while (1)
+            {
+                # Increment NID as long as there are associated objects
+                my @test = $srckey->fetch({ label => 'NID', uid => ++$maxnid });
+                last if scalar @test == 0;
+            }
+
+            # Clone node and assign free node ID
+            my $clone = $node->clone;
+            $clone->nid($maxnid);
+
+            # Add clone to srckey
+            $srckey->add($clone);
+
+            # Loop over each source element that contains the current node
+            foreach my $eid (@{$array})
+            {
+                # Fetch element
+                my $elem = $srckey->fetch({ keyword => '*ELEMENT_SHELL',
+                                            uid     => $eid });
+
+                # Loop over nodes of element
+                for my $testkey (qw( n1 n2 n3 n4 n5 n6 n7 n8 ))
+                {
+                    # Check and replace NID with new ID where necessary
+                    my $testnid = $elem->$testkey;
+                    $elem->$testkey($maxnid)
+                        if defined $testnid and $testnid == $nid;
+                }
+            }
+        }
+    }
+}
+
+# Finalize progress bar
+$progress->update(max(1, $#count));
+
+
+#-------------------------------------------------------------------------------
+#     N O D E   P R O J E C T I O N
+#-------------------------------------------------------------------------------
+
+# Initialize new input deck
+my $newkey = $srckey->clone;
+
+# Set output filename
+$newkey->filepath($outkeyfile);
+
+#
+die "*** ERROR\n" .
+    "    Outkeyfile '$outkeyfile' already exists"
+        if defined $outkeyfile and -f $outkeyfile and not $yes;
+
+# Fetch username
+my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<);
+
+# Build header
+my $header =
+    sprintf(
+        "%s\n" .
+        "created %s\n" .
+        "user %s\n\n" .
+        "srckeyfile = %s (%d bytes)\n" .
+        "last modified %s\n" .
+        "SHA1 hash %s\n\n" .
+        "tarkeyfile = %s (%d bytes)\n" .
+        "last modified %s\n" .
+        "SHA1 hash %s\n\n" .
+        "operation %s\n\n",
+            $FindBin::Script,
+            strftime('%FT%T%z', localtime),
+            $username,
+            $srckeyfile,
+                stat($srckeyfile)->size,
+                strftime('%FT%T%z', localtime(stat($srckeyfile)->mtime)),
+                sha1_hex(read_file($srckeyfile)),
+            $tarkeyfile,
+                stat($tarkeyfile)->size,
+                strftime('%FT%T%z', localtime(stat($tarkeyfile)->mtime)),
+                sha1_hex(read_file($tarkeyfile)),
+            defined $scale ? sprintf("%s = %g", 'SCALE', $scale) :
+                defined $radius ? sprintf("%s = %g", 'RADIUS', $radius) :
+                'UNDEF');
+
+# Add information on shell set keyfile
+$header .=
+    sprintf(
+        "setkeyfile = %s (%d bytes)\n" .
+        "SHA1 hash %s\n\n",
+            $setkeyfile,
+                stat($setkeyfile)->size,
+                sha1_hex(read_file($setkeyfile)))
+                    if -f $setkeyfile and (not $force or $dump);
+
+# Add header comment to keyfile
+$newkey->header($header);
+
+# Input parameters
+if (defined $lcidf)
+{
+    # Create new load curve
+    my ($lc) = $srckey->fetch({ label => 'LCID', uid => $lcidf });
+
+    # Issue warning
+    $progress->message(
+        "*** WARNING\n" .
+        "    Failed to lookup curve with LCID $lcidf in '$srckeyfile'\n")
+            unless defined $lc;
+}
+else
+{
+    # Issue warning if LCDIF is undefined
+    $progress->message(
+        "*** WARNING\n" .
+        "    Parameter LCIDF undefined in keyword ".
+            "*BOUNDARY_PRESCRIBED_FINAL_GEOMETRY\n")
+}
+
+# Create new prescribed boundary condition
+my $bpfg =
+    CAE::DYNA::Keyword::Boundary_Prescribed_Final_Geometry->new({
+        bpfgid => 0,
+        lcidf  => $lcidf,
+    });
+
+# Fetch all source nodes
+@count = $srckey->fetch({ 'label' => 'NID' });
+
+# Update progress bar
+$progress = Term::ProgressBar->new({
+    name       => '[Phase 3] Morphing ........ ',
+    count      => max(1, $#count),
+    ETA        => 'linear',
+    term_width => 80,
+    remove     => 1,
+});
+
+# Configure progress bar
+$progress->minor(0);
+$progress->max_update_rate(1.0);
+
+# Loop over all source nodes
+for my $i (0 .. $#count)
+{
+    # Update progress bar
+    $progress->update($i);
+
+    # Fetch node and NID
+    my $node = $count[$i];
+    my $nid = $node->nid;
+
+    # Fetch target element and re-check that association is unique
+    my $tareid;
+    for my $elem (@{$assocelem{$nid}})
+    {
+        # Fetch source EID
+        my $eid = $elem->uid;
+
+        # Issue error message
+        die "*** ERROR\n" .
+            "    Segmentation failed for source EID $eid:\n" .
+            "    Expected target EID $tareid (received $nn{$eid})"
+                if defined $tareid and $nn{$eid} != $tareid;
+
+        # Fetch target EID from search hash
+        $tareid = $nn{$eid};
+    }
+
+    # Skip unassociated (massless) nodes
+    next unless defined $tareid;
+
+    # Add NID to boundary constraint
+    $bpfg->nodes->save({nid => $nid,
+                        x   => $node->x,
+                        y   => $node->y,
+                        z   => $node->z });
+
+    # Get vector from node
+    my $x = $node->vector;
+
+    # Fetch target element
+    my $tarelem = $tarkey->fetch({ keyword => '*ELEMENT_BEAM', uid => $tareid});
+
+    # Orthogonal project of node to beam element
+    my $p1 = $tarkey->fetch({ label => 'NID', uid => $tarelem->n1 });
+    my $p2 = $tarkey->fetch({ label => 'NID', uid => $tarelem->n2 });
+
+    # Get vectors from nodes
+    $p1 = $p1->vector;
+    $p2 = $p2->vector;
+
+    # Initilaize orthogonal projection, PG
+    my $pg = $p1;
+
+    # Require non-zero length target elements
+    if ( $p1->dist($p2) > 0 )
+    {
+        # Direction vector U from P1 and P2
+        my $u = $p2 - $p1;
+
+        # Calculate scaling factor, LDA
+        my $lda = ( $x - $p1 ) * $u / ( $u * $u );
+
+        # Constrain projection to beam length
+        $lda = min($lda, 1.0);
+        $lda = max($lda, 0.0);
+
+        # Orthogonal projection, PG
+        $pg = $p1 + $lda * $u;
+    }
+
+    # Find direction vector, DIR
+    my $dir = $pg - $x;
+
+    # Get length of direction vector, D
+    my $d = sqrt($dir->norm2);
+
+    # Calculate target position XNEW
+    my $xnew;
+    if (defined $scale)
+    {
+        # Scale-based morphing
+        $xnew = $x + ( 1.0 - $scale ) * $dir;
+    }
+    elsif (defined $radius)
+    {
+        # Radius-based morphing
+        $xnew = $x + ( 1.0 - $radius / $d ) * $dir;
+    }
+    else
+    {
+        # This should not happen
+        die "*** ERROR\n" .
+            "    Morphing failed, either specify --scale or --radius\n";
+    }
+
+    # Finally adjust node coordinates
+    $node->x($xnew->[0]);
+    $node->y($xnew->[1]);
+    $node->z($xnew->[2]);
+}
+
+# Update progress bar
+$progress->update(max(1, $#count));
+
+# Add boundary constraint to keyfile
+$newkey->add($bpfg);
+
+# Print resulting keyfile
+my $rc = $newkey->save;
+
+# Check result of save operation
+if (not defined $rc or $rc != 1)
+{
+    # Issue warning
+    my $msg = "*** WARNING\n" . "    ";
+
+    if (not defined $rc)
+    {
+        $msg .=
+            sprintf(
+                "Attribute 'filepath' of outkeyfile '%s' undefined",
+                    overload::StrVal($newkey));
+    }
+    else
+    {
+        $msg .=
+            sprintf(
+                "Method 'save' of outkeyfile '%s' failed with exit status %d",
+                    overload::StrVal($newkey), $rc);
+    }
+
+    # Issue warning
+    warn $msg;
+
+    # Redirect keyfile to STDOUT
+    print $newkey;
+}
+
+
+__END__
+
+
+=head1 NAME
+
+bodymorph - Perl script to compress and inflate a LS-DYNA body surface contour
+
+
+=head1 SYNOPSIS
+
+B<bodymorph> [I<options>] F<sourcekeyfile> [F<setkeyfile>] F<targetkeyfile>
+
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-o>, B<--out>=I<filename>
+
+Specifies the name of the output file.  Output will be directed to STDOUT unless defined.
+
+=item B<-l>, B<--lcidf>=I<value>
+
+Specifies the load curve ID to be referenced by the prescribed boundary final geometry for parameter B<lcidf>.
+
+=item B<-r>, B<--radius>=I<value>
+
+Specifies the radius of the target beams.
+
+=item B<-s>, B<--scale>=I<value>
+
+Specifies the scaling factor of the human body surface geometry.  The default is C<1>, i.e. the nodes of the original surface will not be translated.
+
+=item B<--thamax>
+
+Specifies the initial cone angle of the search cone in degrees.  The default is C<80>.
+
+=item B<--thastep>
+
+Specifies the search cone increment in degrees.  If no target element is found in the search cone, the cone angle is increased by B<thastep>.  The default is C<5> degrees.
+
+=item B<--flip>
+
+Flips normal vectors of surface geometry.
+
+=item B<-f>, B<--force>
+
+Ignores existing F<setkeyfile>.
+
+=item B<--dump>
+
+Saves the result of the nearest neighbour search to F<setkeyfile>.  Existing files will be overwritten.
+
+=item B<-y>, B<--yes>
+
+Existing F<outkeyfile> will be overwritten.
+
+=item B<--man>
+
+Prints the manual page and exits.
+
+=item B<--help>
+
+Prints a brief help message and exits.
+
+=back
+
+
+=head1 DESCRIPTION
+
+This script parses two input decks in LS-DYNA keyword format and maps a source surface mesh given by shell elements on a target line mesh given by 1D beam elements.  The scripts makes use of the keyword *BOUNDARY_PRESCRIBED_FINAL_GEOMETRY to map each shifted node back to its original position on the surface geometry.  The intended use of this dynamic forming process is to pull clothes from 2D planar shape to the 3D body contour of any virtual human body model.
+
+
+=head1 HISTORY
+
+ 2020-01-18  Original version
+ 2020-04-16  Integration of Perl::Moose
+
+
+=head1 AUTHOR
+
+ Matthias Boljen (L<matthias.boljen@emi.fraunhofer.de>)
+
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2020 by Matthias Boljen
+
+
+This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself. See perldoc perlartistic.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+=cut
