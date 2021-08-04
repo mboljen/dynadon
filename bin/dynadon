@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 #
 # Created:         Mo 2020-04-20 23:32:27 CEST
-# Last Modified:   Thu 2021-02-11 01:47:17 CET
+# Last Modified:   Wed 2021-08-04 17:18:23 CEST
 #
 # bodymorph:
 #   Compress and inflate a human body surface FE mesh
@@ -709,12 +709,12 @@ __END__
 
 =head1 NAME
 
-bodymorph - Perl script to compress and inflate a LS-DYNA body surface contour
+dynadon - Perl script to compress and inflate a LS-DYNA body surface contour
 
 
 =head1 SYNOPSIS
 
-B<bodymorph> [I<options>] F<sourcekeyfile> [F<setkeyfile>] F<targetkeyfile>
+B<dynadon> [I<options>] F<sourcekeyfile> [F<setkeyfile>] F<targetkeyfile>
 
 
 =head1 OPTIONS
@@ -783,14 +783,9 @@ This script parses two input decks in LS-DYNA keyword format and maps a source s
  2020-04-16  Integration of Perl::Moose
 
 
-=head1 AUTHOR
-
- Matthias Boljen (L<matthias.boljen@emi.fraunhofer.de>)
-
-
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2020 by Matthias Boljen
+Copyright 2020, 2021 by Matthias Boljen
 
 
 This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself. See perldoc perlartistic.
