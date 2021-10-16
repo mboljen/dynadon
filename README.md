@@ -1,6 +1,6 @@
 # dynadon
 
-Downscale or upscale a 2D hull geometry and apply boundary conditions to return to the original geometry using the FE code [LS-DYNA](https://www.lstc.com/products/ls-dyna).  This script can be used to implement a dynamically evolving geometry as a stamp to force flexible objects like clothes onto a given 3D target geometry.
+Downscale or upscale a 2D hull geometry and apply boundary conditions to return to the original geometry using the FE code [LS-DYNA](https://www.lstc.com/products/ls-dyna).  This script can be used to implement a dynamically evolving geometry as a dynamically evolving stamp to force flexible objects like clothes onto a given 3D target geometry.
 
 
 
