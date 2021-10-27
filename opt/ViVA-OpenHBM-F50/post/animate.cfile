@@ -1,0 +1,408 @@
+$# LS-PrePost command file created by LS-PrePost(R) V4.7.8 - 09Mar2020 -64bit-Linux
+$# Created on Apr-29-2020 (00:34:40)
+bgstyle plain
+background 1 1 1
+openc d3plot "../d3plot"
+colormap load "lspost.colormap"
+timestamp 0
+featuretree show 0
+ttbplayer hide
+state 52;
+right
+rz 45
+ac
+print tif "animate_000.tif" enlisted "OGL1x1"
+rz 5
+rz -5
+print tif "animate_000.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_001.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_002.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_003.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_004.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_005.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_006.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_007.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_008.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_009.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_010.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_011.tif" enlisted "OGL1x1"
+rz 5
+print tif "animate_012.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_013.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_014.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_015.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_016.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_017.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_018.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_019.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_020.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_021.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_022.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_023.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_024.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_025.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_026.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_027.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_028.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_029.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_030.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_031.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_032.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_033.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_034.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_035.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_036.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_037.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_038.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_039.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_040.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_041.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_042.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_043.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_044.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_045.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_046.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_047.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_048.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_049.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_050.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_051.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_052.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_053.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_054.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_055.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_056.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_057.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_058.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_059.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_060.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_061.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_062.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_063.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_064.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_065.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_066.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_067.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_068.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_069.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_070.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_071.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_072.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_073.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_074.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_075.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_076.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_077.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_078.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_079.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_080.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_081.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_082.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_083.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_084.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_085.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_086.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_087.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_088.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_089.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_090.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_091.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_092.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_093.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_094.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_095.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_096.tif" enlisted "OGL1x1" 
+state -2;
+print tif "animate_097.tif" enlisted "OGL1x1" 
+state 0;
+print tif "animate_098.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_099.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_100.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_101.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_102.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_103.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_104.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_105.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_106.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_107.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_108.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_109.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_110.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_111.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_112.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_113.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_114.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_115.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_116.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_117.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_118.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_119.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_120.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_121.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_122.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_123.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_124.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_125.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_126.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_127.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_128.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_129.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_130.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_131.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_132.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_133.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_134.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_135.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_136.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_137.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_138.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_139.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_140.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_141.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_142.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_143.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_144.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_145.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_146.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_147.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_148.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_149.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_150.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_151.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_152.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_153.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_154.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_155.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_156.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_157.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_158.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_159.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_160.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_161.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_162.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_163.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_164.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_165.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_166.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_167.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_168.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_169.tif" enlisted "OGL1x1" 
+rz 5
+print tif "animate_170.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_171.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_172.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_173.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_174.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_175.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_176.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_177.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_178.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_179.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_180.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_181.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_182.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_183.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_184.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_185.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_186.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_187.tif" enlisted "OGL1x1"
+state +2;
+print tif "animate_188.tif" enlisted "OGL1x1"
+state +2;
+print tif "animate_189.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_190.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_191.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_192.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_193.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_194.tif" enlisted "OGL1x1" 
+state +2;
+print tif "animate_195.tif" enlisted "OGL1x1" 
+quit

@@ -99,6 +99,8 @@ $ dynadon [--options] sourcekeyfile [setkeyfile] targetkeyfile
 
 [enter text here]
 
++ Klein et al.: *How to Combine 3D Textile Modeling with Latest FE Human Body Models*,
+  Advances in Transdisciplinary Engineering, Vol. 11, pp. 166-177, [DOI:10.3233/ATDE200022](https://doi.org/10.3233/ATDE200022)
 
 
 ## Examples

@@ -1,2 +1,13 @@
 /pkg
 /share
+/opt/ViVA-OpenHBM-F50/_.hostlist
+/opt/ViVA-OpenHBM-F50/_.task
+/opt/ViVA-OpenHBM-F50/d3dump*
+/opt/ViVA-OpenHBM-F50/d3hsp*
+/opt/ViVA-OpenHBM-F50/d3plot*
+/opt/ViVA-OpenHBM-F50/messag*
+/opt/ViVA-OpenHBM-F50/status.out
+/opt/ViVA-OpenHBM-F50/build/dynadon.k
+/opt/ViVA-OpenHBM-F50/post/animate_???.gif
+/opt/ViVA-OpenHBM-F50/post/animate_???.tif
+/opt/ViVA-OpenHBM-F50/post/animate.mp4
