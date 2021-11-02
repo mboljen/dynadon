@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 #
 # Created:         Mo 2020-04-20 23:32:27 CEST
-# Last Modified:   Wed 2021-10-27 13:06:09 CEST
+# Last Modified:   Wed 2021-10-27 19:03:21 CEST
 #
 # bodymorph:
 #   Compress and inflate a human body surface FE mesh
@@ -282,10 +282,10 @@ for my $i (0 .. $#count)
             # Fetch corresponding shell set and add source EID
             my $set = $setkey->fetch({ keyword => '*SET_SHELL',
                                        uid     => $tareid0 });
-            $set->eid->push($srceid);
+            $set->list->push($srceid);
 
             # Sort element list
-            $set->eid->sort_in_place( sub { $_[0] <=> $_[1] } );
+            $set->list->sort_in_place( sub { $_[0] <=> $_[1] } );
         }
         else
         {
